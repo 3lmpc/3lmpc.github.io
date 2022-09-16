@@ -167,7 +167,6 @@
       mode: "no-cors"
     }).then(() => {
       alert("Confirmation Form submitted")
-      document.getElementById("mcp-confirmation-class-no").value = "";
       document.getElementById("mcp-confirmation-mpc-date").value = "";
       document.getElementById("mcp-confirmation-suggest-ans").value = "";
     }).catch(() => {
@@ -199,7 +198,6 @@
   }
 
   function handleMpc(mpc) {
-    mpc.link += "?embedded=true";
     const link = document.getElementById("mcp-details-link");
     link.value = mpc.link;
     const ans = document.getElementById("mcp-details-answer");
