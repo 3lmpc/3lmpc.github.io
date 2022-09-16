@@ -199,6 +199,7 @@
   }
 
   function handleMpc(mpc) {
+    mpc.link += "?embedded=true";
     const link = document.getElementById("mcp-details-link");
     link.value = mpc.link;
     const ans = document.getElementById("mcp-details-answer");
@@ -206,7 +207,7 @@
     link.disabled = false;
     ans.disabled = false;
 
-    document.getElementById('mpc-gform').setAttribute("src", mpc.link + "?embedded=true");
+    document.getElementById('mpc-gform').setAttribute("src", mpc.link);
     document.getElementById("mcp-confirmation-mpc-date").value = mpc.lastUpdated;
   }
 </script>
