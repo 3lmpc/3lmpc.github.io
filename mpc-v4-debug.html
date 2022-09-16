@@ -1,5 +1,6 @@
 <html>
     <head>
+        <meta http-equiv="Content-Security-Policy" content="frame-src https://docs.google.com;">
         <style>
             html {
                 display: table;
@@ -99,7 +100,7 @@
             <p class="mcp-text">Date of MPC</p>
             <input id="mcp-confirmation-mpc-date" class="mcp-textarea">
             <p class="mcp-text">Suggest Answer</p>
-            <input id="mcp-confirmation-suggest-ans" class="mcp-textarea">
+            <textarea id="mcp-confirmation-suggest-ans" class="mcp-textarea" rows="5"></textarea>
             <div class="mcp-buttons-wrapper" >
                 <button class="rounded-button" onclick="postConfirmation();" style="float:right">Submit Confirmation</button>
             </div>
@@ -187,7 +188,7 @@
                 ans.value = mpc.answer;
                 document.getElementById('mpc-gform').setAttribute("src", mpc.link);
                 document.getElementById("mcp-confirmation-mpc-date").value = mpc.lastUpdated;
-                
+
                 link.disabled = false;
                 ans.disabled = false;
             }
