@@ -88,7 +88,8 @@
 
             <div class="mcp-buttons-wrapper" >
                 <button class="rounded-button" onclick="fetchMpcDetails();" style="float:right">Fetch MPC Details</button>
-                <button class="rounded-button" onclick="copySuggestedAnswer()" style="float:right">Copy Suggested Answer</button>
+                <button class="rounded-button" onclick="copySuggestedAnswer()" style="float:right">Copy Answer</button>
+                <button class="rounded-button" onclick="openLinkInNewTab();" style="float:right">Open Link</button>
             </div>
         </div>
 
@@ -121,6 +122,15 @@
             function formatDate(date) {
                 return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
                     .toISOString().split('T')[0];
+            }
+
+            function openLinkInNewTab() {
+                const link = document.getElementById("mcp-details-link").value;
+                if(link === "") {
+                    alert("No MPC link available. You'll have to fetch the MPC details")
+                    return;
+                }
+                window.open(link ,'_blank');
             }
 
             function postConfirmation() {
@@ -166,7 +176,9 @@
                     alert("No suggested answer available. You'll have to fetch the MPC details")
                     return;
                 }
-                navigator.clipboard.writeText(text)
+                navigator.clipboard.writeText(text).then(() => { }, () => {
+                    alert("Failed to copy to clipboard")
+                });
             }
 
             function fetchMpcDetails() {
