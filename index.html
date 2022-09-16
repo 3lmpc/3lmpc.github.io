@@ -1,0 +1,209 @@
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="frame-src docs.google.com;">
+  <style>
+    html {
+      display: table;
+      margin: auto;
+    }
+
+    body {
+      background: royalblue;
+      display: table-cell;
+      vertical-align: middle;
+      padding-top: 10px;
+    }
+
+    .mcp-text {
+      font-family: sans-serif;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 5px;
+      clear: both;
+    }
+
+    .mcp-textarea {
+      border-radius: 6px;
+      padding: 8px;
+      font-family: sans-serif;
+      font-size: 16px;
+      color: gray(50);
+
+      width: 600px;
+      resize: none;
+      border: none;
+      outline: none;
+    }
+
+    .rounded-button {
+      background-color: #3498db;
+      border: none;
+      border-radius: 7px;
+      color: white;
+      letter-spacing: 0.5px;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 10px;
+      text-align: center;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+
+    .mcp-gform {
+      margin-top: 20px;
+      border-radius: 8px;
+      width: 590px;
+      border-color: black;
+      border-width: 5px;
+
+      height: 800px;
+    }
+
+    .rounded-button:hover {
+      background-color: #6498db;
+    }
+
+    .mcp-buttons-wrapper {
+      width: 600px;
+      height: 50px;
+      clear: both;
+    }
+
+    .mcp-divider {
+      border-top: 2px solid white;
+      height: 10px;
+      float: left;
+      width: 600px;
+      margin-top: 10px;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+<div class="mcp-details-wrapper">
+  <p class="mcp-text">MPC Link</p>
+  <input id="mcp-details-link" class="mcp-textarea" disabled readonly="readonly">
+  <p class="mcp-text">Suggested Answer:</p>
+  <textarea id="mcp-details-answer" class="mcp-textarea" rows="5" disabled></textarea>
+
+  <div class="mcp-buttons-wrapper" >
+    <button class="rounded-button" onclick="fetchMpcDetails();" style="float:right">Fetch MPC Details</button>
+    <button class="rounded-button" onclick="copySuggestedAnswer()" style="float:right">Copy Answer</button>
+    <button class="rounded-button" onclick="openLinkInNewTab();" style="float:right">Open Link</button>
+  </div>
+</div>
+
+<div class="mcp-divider"></div>
+
+<div class="mcp-confirmation-wrapper">
+  <p class="mcp-text">Class Number</p>
+  <input id="mcp-confirmation-class-no" class="mcp-textarea">
+  <p class="mcp-text">Date of MPC</p>
+  <input id="mcp-confirmation-mpc-date" class="mcp-textarea">
+  <p class="mcp-text">Suggest Answer</p>
+  <textarea id="mcp-confirmation-suggest-ans" class="mcp-textarea" rows="5"></textarea>
+  <div class="mcp-buttons-wrapper" >
+    <button class="rounded-button" onclick="postConfirmation();" style="float:right">Submit Confirmation</button>
+  </div>
+</div>
+
+<div class="mcp-divider"></div><br><br>
+<iframe id="mpc-gform" class="mcp-gform"></iframe>
+<script>
+  const mpcLinkElem = document.getElementById("mcp-details-link");
+  mpcLinkElem.oninput = () => {
+    mpcLinkElem.value = mpcLinkElem.value.replace(/\n/g,'')
+  }
+  try {
+    document.getElementById("mcp-confirmation-class-no").value =
+            localStorage.getItem("classNo");
+  } catch(ignored) { }
+
+  function formatDate(date) {
+    return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+            .toISOString().split('T')[0];
+  }
+
+  function openLinkInNewTab() {
+    const link = document.getElementById("mcp-details-link").value;
+    if(link === "") {
+      alert("No MPC link available. You'll have to fetch the MPC details")
+      return;
+    }
+    window.open(link ,'_blank');
+  }
+
+  function postConfirmation() {
+    const classNo = parseInt(document.getElementById("mcp-confirmation-class-no").value);
+    if(isNaN(classNo) || (classNo < 1 || classNo > 32)) {
+      alert("Class number must be an integer between 1-32")
+      return;
+    }
+
+    try{
+      localStorage.setItem("classNo", classNo.toString());
+    } catch (ignored) { }
+
+    let mpcDate;
+    try {
+      mpcDate = formatDate(new Date(document.getElementById("mcp-confirmation-mpc-date").value))
+    } catch (e) {
+      alert("Date of MPC must be a valid date in YYYY-MM-DD or YYYY/MM/DD");
+      return;
+    }
+
+    const suggestAnswer = document.getElementById("mcp-confirmation-suggest-ans").value;
+    const confirmationFormId = "1FAIpQLSftzBr5awvBLx-s5W2hB-GtLMu5ZSqkUru4sJBN2-tMWxCQ-w";
+    fetch(`https://docs.google.com/forms/d/e/${confirmationFormId}/formResponse?&submit=Submit?usp=pp_url` +
+            "&entry.1483139625=" + mpcDate +
+            "&entry.454736878=" + classNo.toString() +
+            "&entry.1206979054=" + encodeURIComponent(suggestAnswer), {
+      method: "POST",
+      mode: "no-cors"
+    }).then(() => {
+      alert("Confirmation Form submitted")
+      document.getElementById("mcp-confirmation-class-no").value = "";
+      document.getElementById("mcp-confirmation-mpc-date").value = "";
+      document.getElementById("mcp-confirmation-suggest-ans").value = "";
+    }).catch(() => {
+      alert("Failed to submit confirmation form");
+    });
+  }
+
+  function copySuggestedAnswer() {
+    const text = document.getElementById("mcp-details-answer").value;
+    if(text.length === 0) {
+      alert("No suggested answer available. You'll have to fetch the MPC details")
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => { }, () => {
+      alert("Failed to copy to clipboard")
+    });
+  }
+
+  function fetchMpcDetails() {
+    /* Google Apps Script that output the updates as JSON */
+    const appScriptId = "AKfycbzeCE9an7-BsSq1Nn1Cv5Atr-7wY_9HpswgjlpCqHN259a0x_Le1BxwfLMsNx3hydOskA"
+    fetch(`https://script.google.com/macros/s/${appScriptId}/exec`)
+            .then(res => res.text())
+            .then(res => {
+              handleMpc(JSON.parse(res))
+            }).catch(reason => {
+      alert("Failed to fetch MPC details: " + reason)
+    })
+  }
+
+  function handleMpc(mpc) {
+    const link = document.getElementById("mcp-details-link");
+    link.value = mpc.link;
+    const ans = document.getElementById("mcp-details-answer");
+    ans.value = mpc.answer;
+    document.getElementById('mpc-gform').setAttribute("src", mpc.link);
+    document.getElementById("mcp-confirmation-mpc-date").value = mpc.lastUpdated;
+
+    link.disabled = false;
+    ans.disabled = false;
+  }
+</script>
+</body>
+</html>
