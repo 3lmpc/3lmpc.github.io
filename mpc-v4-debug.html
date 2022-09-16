@@ -81,9 +81,9 @@
     <body>
         <div class="mcp-details-wrapper">
             <p class="mcp-text">MPC Link</p>
-            <input id="mcp-details-link" class="mcp-textarea">
+            <input id="mcp-details-link" class="mcp-textarea" disabled>
             <p class="mcp-text">Suggested Answer:</p>
-            <textarea id="mcp-details-answer" class="mcp-textarea" rows="5"></textarea>
+            <textarea id="mcp-details-answer" class="mcp-textarea" rows="5" disabled></textarea>
 
             <div class="mcp-buttons-wrapper" >
                 <button class="rounded-button" onclick="fetchMpcDetails();" style="float:right">Fetch MPC Details</button>
@@ -142,8 +142,6 @@
                 }
 
                 const suggestAnswer = document.getElementById("mcp-confirmation-suggest-ans").value;
-                //https://docs.google.com/forms/d/e/1FAIpQLSftzBr5awvBLx-s5W2hB-GtLMu5ZSqkUru4sJBN2-tMWxCQ-w/viewform?usp=pp_url&
-                // entry.1483139625=2022-09-15&entry.454736878=1&entry.1206979054=anser
                 const confirmationFormId = "1FAIpQLSftzBr5awvBLx-s5W2hB-GtLMu5ZSqkUru4sJBN2-tMWxCQ-w";
                 fetch(`https://docs.google.com/forms/d/e/${confirmationFormId}/formResponse?&submit=Submit?usp=pp_url` +
                     "&entry.1483139625=" + mpcDate +
@@ -172,7 +170,8 @@
 
             function fetchMpcDetails() {
                 /* Google Apps Script that output the updates as JSON */
-                fetch("https://script.google.com/macros/s/AKfycbxo_tY2h3npra-JeifugNaqd6o3rbvFHa4Ayh1mlBZYhRjHWttCl1xnCdtx5Bj9iY7OsQ/exec")
+                const appScriptId = "AKfycbzeCE9an7-BsSq1Nn1Cv5Atr-7wY_9HpswgjlpCqHN259a0x_Le1BxwfLMsNx3hydOskA"
+                fetch(`https://script.google.com/macros/s/${appScriptId}/exec`)
                     .then(res => res.text())
                     .then(res => {
                         handleMpc(JSON.parse(res))
@@ -182,10 +181,15 @@
             }
 
             function handleMpc(mpc) {
-                document.getElementById("mcp-details-link").value = mpc.link;
-                document.getElementById("mcp-details-answer").value = mpc.answer;
+                const link = document.getElementById("mcp-details-link");
+                link.value = mpc.link;
+                const ans = document.getElementById("mcp-details-answer");
+                ans.value = mpc.answer;
                 document.getElementById('mpc-gform').setAttribute("src", mpc.link);
                 document.getElementById("mcp-confirmation-mpc-date").value = mpc.lastUpdated;
+                
+                link.disabled = false;
+                ans.disabled = false;
             }
         </script>
     </body>
