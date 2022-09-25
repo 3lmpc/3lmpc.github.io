@@ -1,0 +1,402 @@
+<html>
+<head>
+    <style>
+        html {
+            display: table;
+            margin: auto;
+        }
+
+        body {
+            background: royalblue;
+            display: table-cell;
+            vertical-align: middle;
+            padding-top: 10px;
+        }
+
+        .homework-list {
+            display: flow;
+            border-collapse: collapse;
+            margin: 10px 0;
+            width: 800px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+
+            table-layout: fixed;
+            font-size: 15px;
+            font-family: sans-serif;
+        }
+
+        .homework-list thead tr {
+            color: #ffffff;
+            text-align: left;
+            padding: 2px;
+        }
+
+        .homework-list th{
+            text-align: left;
+            white-space: pre;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .homework-list td {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .homework-list tbody tr {
+            border-bottom: 1px solid #dddddd;
+
+            padding-top: 8px;
+            padding-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .homework-list tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .title {
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            margin: 5px;
+            clear: both;
+        }
+
+        .text {
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            margin: 5px 3px;
+            clear: both;
+        }
+
+        .rounded-input {
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-family: sans-serif;
+            font-size: 16px;
+            color: gray(50);
+
+            width: 800px;
+            resize: none;
+            border: none;
+            outline: none;
+        }
+
+        .rounded-button {
+            background-color: #3498db;
+            border: none;
+            border-radius: 7px;
+            color: white;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 10px;
+            margin-top: -10px;
+            text-align: center;
+        }
+
+        .rounded-button:hover {
+            background-color: #6498db;
+        }
+
+        .buttons-wrapper {
+            width: 800px;
+            height: 50px;
+            clear: both;
+        }
+
+        .simple-checkbox {
+            display: grid;
+            grid-template-columns: 1em auto;
+            gap: 0.5em;
+        }
+
+        .divider {
+            border-top: 2px solid white;
+            height: 10px;
+            float: left;
+            width: 800px;
+            clear: both;
+        }
+    </style>
+    <title>Homework List</title>
+</head>
+    <body>
+        <script>
+            const SCRIPT_ID = "AKfycby-ZnjC12MSz-VyX5COKCWngJnTKOQlpRqRI2GoYEy4BEwXRK_kILNGZ9Pwld7FhbEl";
+            const ADD_ANSWER_GFORM = "1FAIpQLSfFboOH-hGhS7pDJJj4UWCdCB_aEr4anQ_pf56oGTiN6VeWgA";
+        </script>
+        <p class="title">HWL V1</p>
+        <table class="homework-list" id="homework-list">
+            <colgroup>
+                <col span="1" style="width: 10%;">
+                <col span="1" style="width: 12%;">
+                <col span="1" style="width: 20%;">
+                <col span="1" style="width: 58%;">
+            </colgroup>
+            <tr id="header">
+                <th>Subject</th>
+                <th>Category</th>
+                <th>Due</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+        </table>
+
+        <div class="filter-wrapper" style="margin-bottom: 15px;">
+            <label class="rounded-input" style="padding-left: 0;">
+                <input id="filter-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
+                       checked onclick="updateFilterParamsEnabled(this.checked)">
+                Only show assignments that are
+            </label>
+            <select id="filter-criteria" class="rounded-input" style="width: auto" onchange="updateFilter()">
+                <option>overdue by over</option>
+                <option>overdue by less than</option>
+                <option selected>due within</option>
+                <option>due after over</option>
+            </select>
+            <input id="filter-time-limit" class="rounded-input" type="number" min="1" max="99"
+                   style="width: 60px" oninput="updateFilter()" value="7">
+            <select id="filter-time-unit" class="rounded-input" style="width: 110px" onchange="updateFilter()">
+                <option>day(s)</option>
+                <option>week(s)</option>
+            </select>
+        </div>
+
+        <div class="buttons-wrapper">
+            <button class="rounded-button" onclick="fetchHomeworkList();" style="float:right">Update Homework List</button>
+        </div>
+
+        <script>
+            function updateFilterParamsEnabled(isEnabled) {
+                [
+                    document.getElementById("filter-criteria"),
+                    document.getElementById("filter-time-limit"),
+                    document.getElementById("filter-time-unit")
+                ].forEach(element => {
+                    if(!isEnabled) {
+                        element.setAttribute("disabled", "disabled");
+                    }else {
+                        element.removeAttribute("disabled")
+                    }
+                });
+                updateFilter();
+            }
+
+            function updateFilter() {
+                if(document.getElementById("filter-enabled").checked) {
+                    renderHomework(applyFilter(window.homeworks))
+                } else {
+                    renderHomework(window.homeworks)
+                }
+            }
+
+
+            /**
+             * Apply the filter, which is, defined by the <input> (s) element, to the given homework list
+             * @param homeworks The homework list to apply
+             */
+            function applyFilter(homeworks) {
+                const filterCriteria = document.getElementById("filter-criteria").selectedIndex;
+                const filterTimeLimit = document.getElementById("filter-time-limit").value;
+                const filterTimeUnit = document.getElementById("filter-time-unit").selectedIndex;
+
+                /* Date are all in local time milliseconds */
+                const currentTime = new Date().getTime();
+                let filterLimitMillis = filterTimeLimit * 1000 * 60 * 60 * 24; /* In days */
+                if(filterTimeUnit === 1) {
+                    filterLimitMillis *= 7; /* In weeks */
+                }
+
+                switch (filterCriteria) {
+                    case 0:
+                        window.filterPredicate = (deadlineTime) =>
+                            currentTime > deadlineTime &&  /* Overdued */
+                            (currentTime - deadlineTime) > filterLimitMillis; /* By over */
+                        break;
+                    case 1:
+                        window.filterPredicate = (deadlineTime) =>
+                            currentTime > deadlineTime &&  /* Overdued */
+                            (currentTime - deadlineTime) < filterLimitMillis; /* Less than */
+                        break;
+                    case 2:
+                        window.filterPredicate = (deadlineTime) =>
+                            deadlineTime > currentTime &&  /* Dued after */
+                            (deadlineTime - currentTime) < filterLimitMillis; /* within */
+                        break;
+                    case 3:
+                        window.filterPredicate = (deadlineTime) =>
+                            deadlineTime > currentTime &&  /* Dued after */
+                            (deadlineTime - currentTime) > filterLimitMillis; /* over */
+                        break;
+                    default:
+                        throw new Error(filterCriteria)
+                }
+
+                return homeworks.filter(homework => {
+                    const deadlineTime = new Date(homework["date"] + "T" + homework["time"]).getTime();
+                    return window.filterPredicate(deadlineTime);
+                });
+            }
+
+            function renderHomework(homeworks) {
+                console.log(homeworks)
+
+                window.renderedHomeworks = homeworks;
+                const tableBody = document.querySelector("#homework-list > tbody");
+                tableBody.querySelectorAll('tr:not([id="header"])').forEach(node => {
+                    tableBody.removeChild(node)
+                })
+
+                function appendHomeworkEntry(row, value) {
+                    const cell = document.createElement("td");
+                    cell.innerHTML = value;
+                    row.append(cell);
+                }
+
+                if(homeworks.length === 0) {
+                    const row = document.createElement("tr");
+                    for (let i = 0; i < 5; i++) {
+                        appendHomeworkEntry(row, "-");
+                    }
+                    tableBody.append(row)
+                    alert("No entry are found, possibly because all of them are filtered")
+                    return
+                }
+
+                homeworks.forEach(homework => {
+                    const row = document.createElement("tr");
+                    appendHomeworkEntry(row, homework["subject"])
+                    appendHomeworkEntry(row, homework["category"])
+                    appendHomeworkEntry(row, homework["date"] + " " + homework["time"])
+                    appendHomeworkEntry(row, homework["description"])
+                    tableBody.append(row);
+                })
+            }
+
+            function fetchHomeworkList() {
+                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec`, {
+                    method: "GET" })
+                    .then(res => res.text())
+                    .then(res => {
+                        window.homeworks = JSON.parse(res);
+                        updateFilter();
+                    }).catch(reason => {
+                    console.log(reason)
+                    alert("Failed to fetch homeworks")
+                });
+            }
+            fetchHomeworkList();
+        </script>
+
+        <div class="divider"></div>
+        <div class="add-homework-wrapper">
+            <p class="text">Subject</p>
+            <select id="add-homework-subject" class="rounded-input">
+                <option>Chin</option>
+                <option>Eng</option>
+                <option>Math</option>
+                <option>Phy</option>
+                <option>Chem</option>
+                <option>Bio</option>
+                <option>Geog</option>
+                <option>Hist</option>
+                <option>Chist</option>
+                <option>BF</option>
+                <option>ERE</option>
+                <option>VA</option>
+                <option>Music</option>
+                <option>LS</option>
+                <option>PTH</option>
+                <option>CL</option>
+                <option>PE</option>
+            </select>
+
+            <p class="text">Category</p>
+            <select id="add-homework-category" class="rounded-input" onchange="suggestSubmissionTime(this.selectedIndex)">
+                <option>HW</option>
+                <option>Test</option>
+                <option>Bring</option>
+            </select>
+
+            <p class="text">Date of Submission</p>
+            <input id="add-homework-date" class="rounded-input" type="date">
+
+            <p class="text">Submission Time</p>
+            <input id="add-homework-time" class="rounded-input" type="time">
+
+            <p class="text">Description</p>
+            <textarea id="add-homework-description" class="rounded-input" rows="5"></textarea>
+            <div style="margin-bottom: 15px"></div>
+            <div class="buttons-wrapper" >
+                <button class="rounded-button" onclick="postNewHomework()" style="float:right">Add Homework</button>
+            </div>
+        </div>
+
+        <script>
+            function suggestSubmissionTime(category) {
+                const dueTime = document.getElementById("add-homework-time");
+                const suggestedTime = [
+                    "09:20:00",
+                    "",
+                    "08:05:00"
+                ]
+                dueTime.value = suggestedTime[category];
+            }
+            suggestSubmissionTime(0);
+
+            function postNewHomework() {
+                const elSubject = document.getElementById("add-homework-subject");
+                const elCategory = document.getElementById("add-homework-category");
+
+                const subject = elSubject.options[elSubject.selectedIndex].text;
+                const category = elCategory.options[elCategory.selectedIndex].text;
+                const date = document.getElementById("add-homework-date").value;
+                const time = document.getElementById("add-homework-time").value;
+                const description = document.getElementById("add-homework-description").value;
+
+                if(date === "" || time === "") {
+                    alert("Due date/ time cannot be empty")
+                    return;
+                }
+
+                if(description === "") {
+                    alert("Description cannot be empty");
+                    return;
+                }
+
+                return fetch(`https://docs.google.com/forms/d/e/${ADD_ANSWER_GFORM}/formResponse?&submit=Submit?usp=pp_url` +
+                    "&entry.2052585610=" + subject +
+                    "&entry.227903901=" + category +
+                    "&entry.878615016=" + date +
+                    "&entry.1576844239=" + time +
+                    "&entry.741659383=" + encodeURIComponent(description), {
+                    method: "POST",
+                    mode: "no-cors"
+                }).then(() => {
+                    alert("Homework added");
+                    ["add-homework-subject", "add-homework-category"].forEach(s =>
+                        document.getElementById(s).selectedIndex = 0);
+                    ["add-homework-date", "add-homework-description"].forEach(s =>
+                        document.getElementById(s).value = "");
+                    suggestSubmissionTime(0);
+                }).catch(() => {
+                    alert("Failed to add homework");
+                });
+            }
+        </script>
+    </body>
+</html>
