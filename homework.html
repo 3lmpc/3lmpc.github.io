@@ -134,7 +134,7 @@
             const SCRIPT_ID = "AKfycby-ZnjC12MSz-VyX5COKCWngJnTKOQlpRqRI2GoYEy4BEwXRK_kILNGZ9Pwld7FhbEl";
             const ADD_ANSWER_GFORM = "1FAIpQLSfFboOH-hGhS7pDJJj4UWCdCB_aEr4anQ_pf56oGTiN6VeWgA";
         </script>
-        <p class="title">HWL V1</p>
+        <p class="title">HWL V1.1</p>
         <table class="homework-list" id="homework-list">
             <colgroup>
                 <col span="1" style="width: 10%;">
@@ -206,7 +206,8 @@
 
 
             /**
-             * Apply the filter, which is, defined by the <input> (s) element, to the given homework list
+             * Apply the filter, which is, defined by the <input> (s) element, to the given homework list<br>
+             * Note that the original homework list is not modify. Instead, a clone is returned
              * @param homeworks The homework list to apply
              */
             function applyFilter(homeworks) {
@@ -261,9 +262,13 @@
                     tableBody.removeChild(node)
                 })
 
-                function appendHomeworkEntry(row, value) {
+                function appendHomeworkEntry(row, value, isEnglish) {
                     const cell = document.createElement("td");
                     cell.innerHTML = value;
+                    if(isEnglish === true) {
+                        cell.style.fontWeight = "bold";
+                        cell.style.textDecoration = "underline"
+                    }
                     row.append(cell);
                 }
 
@@ -273,16 +278,19 @@
                         appendHomeworkEntry(row, "-");
                     }
                     tableBody.append(row)
-                    alert("No entry are found, possibly because all of them are filtered")
+                    if(isFiltered) {
+                            alert("No entry are found, possibly because all of them are filtered")
+                    }
                     return
                 }
 
                 homeworks.forEach(homework => {
                     const row = document.createElement("tr");
-                    appendHomeworkEntry(row, homework["subject"])
-                    appendHomeworkEntry(row, homework["category"])
+                    const isBold = homework["subject"] === "English" || homework["subject"] === "Eng";
+                    appendHomeworkEntry(row, homework["subject"], isBold)
+                    appendHomeworkEntry(row, homework["category"], isBold)
                     appendHomeworkEntry(row, homework["date"] + " " + homework["time"])
-                    appendHomeworkEntry(row, homework["description"])
+                    appendHomeworkEntry(row, homework["description"], isBold)
                     tableBody.append(row);
                 })
             }
@@ -350,7 +358,7 @@
             function suggestSubmissionTime(category) {
                 const dueTime = document.getElementById("add-homework-time");
                 const suggestedTime = [
-                    "09:20:00",
+                    "08:00:00",
                     "",
                     "08:05:00"
                 ]
