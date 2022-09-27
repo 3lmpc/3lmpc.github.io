@@ -1,140 +1,280 @@
 <html>
-<head>
-    <style>
-        html {
-            display: table;
-            margin: auto;
-        }
+    <!--
+            If you are curious enough to see the HTML, you may notice that
+        script(s) and style(s) are split into multiple <script> and <style> (s).
+        This is because I have to shove all of my CSS and JS into a single HTML
+        file, which make the file hard to navigate and bring pain while editing.
+        By splitting them into multiple tags, I can collapse those tag in my IDE,
+         which make it much easier to navigate.
 
-        body {
-            background: royalblue;
-            display: table-cell;
-            vertical-align: middle;
-            padding-top: 10px;
-        }
+            And, if you are curious about how it works, it invokes a Google Apps
+        Script REST-fully. That Apps Script will then send back a homework list
+        that is actually stored in a Google Spreadsheets.
 
-        .homework-list {
-            display: flow;
-            border-collapse: collapse;
-            margin: 10px 0;
-            width: 800px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-            border-radius: 8px;
+            When adding a new homework to the list, it submits a Google Form that
+        contains the details of the homework REST-fully. Since the Google Form is
+        linked into that Google Spreadsheet, a new entry is added.
 
-            table-layout: fixed;
-            font-size: 15px;
-            font-family: sans-serif;
-        }
+            These two definitely-not-over-complicated mechanism provides a read/
+        append-only access to the public homework list :D
 
-        .homework-list thead tr {
-            color: #ffffff;
-            text-align: left;
-            padding: 2px;
-        }
+     -->
+    <head>
+        <style id="style-element">
+            html {
+                display: table;
+                margin: auto;
+            }
 
-        .homework-list th{
-            text-align: left;
-            white-space: pre;
-            padding-top: 8px;
-            padding-bottom: 8px;
-            padding-left: 10px;
-        }
+            body {
+                background: royalblue;
+                display: table-cell;
+                vertical-align: middle;
+                padding-top: 10px;
+            }
+            .title {
+                font-family: sans-serif;
+                font-weight: bold;
+                font-size: 18px;
+                color: white;
+                margin: 5px;
+                clear: both;
+            }
 
-        .homework-list td {
-            padding-top: 8px;
-            padding-bottom: 8px;
-            padding-left: 10px;
-        }
+            .text {
+                font-family: sans-serif;
+                font-weight: bold;
+                font-size: 16px;
+                color: white;
+                margin: 5px 3px;
+                clear: both;
+            }
 
-        .homework-list tbody tr {
-            border-bottom: 1px solid #dddddd;
+            .rounded-input {
+                border-radius: 6px;
+                padding: 8px;
+                margin-bottom: 10px;
+                font-family: sans-serif;
+                font-size: 16px;
+                color: gray(50);
 
-            padding-top: 8px;
-            padding-bottom: 8px;
-            padding-left: 10px;
-        }
+                width: 800px;
+                resize: none;
+                border: none;
+                outline: none;
+            }
 
-        .homework-list tbody tr:nth-of-type(even) {
-            background-color: #f3f3f3;
-        }
+            .rounded-button {
+                background-color: #3498db;
+                border: none;
+                border-radius: 7px;
+                color: white;
+                letter-spacing: 0.5px;
+                font-weight: bold;
+                font-size: 16px;
+                padding: 10px;
+                margin-top: -10px;
+                text-align: center;
+            }
 
-        .title {
-            font-family: sans-serif;
-            font-weight: bold;
-            font-size: 18px;
-            color: white;
-            margin: 5px;
-            clear: both;
-        }
+            .rounded-button:hover {
+                background-color: #6498db;
+            }
 
-        .text {
-            font-family: sans-serif;
-            font-weight: bold;
-            font-size: 16px;
-            color: white;
-            margin: 5px 3px;
-            clear: both;
-        }
+            .buttons-wrapper {
+                width: 800px;
+                height: 50px;
+                clear: both;
+            }
 
-        .rounded-input {
-            border-radius: 6px;
-            padding: 8px;
-            margin-bottom: 10px;
-            font-family: sans-serif;
-            font-size: 16px;
-            color: gray(50);
+            .simple-checkbox {
+                display: grid;
+                grid-template-columns: 1em auto;
+                gap: 0.5em;
+            }
 
-            width: 800px;
-            resize: none;
-            border: none;
-            outline: none;
-        }
+            .divider {
+                border-top: 2px solid white;
+                height: 10px;
+                float: left;
+                width: 800px;
+                clear: both;
+            }
 
-        .rounded-button {
-            background-color: #3498db;
-            border: none;
-            border-radius: 7px;
-            color: white;
-            letter-spacing: 0.5px;
-            font-weight: bold;
-            font-size: 16px;
-            padding: 10px;
-            margin-top: -10px;
-            text-align: center;
-        }
+        </style>
+        <style id="style-hwl">
+            .homework-list {
+                display: flow;
+                border-collapse: collapse;
+                margin: 10px 0;
+                width: 800px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                border-radius: 8px;
 
-        .rounded-button:hover {
-            background-color: #6498db;
-        }
+                table-layout: fixed;
+                font-size: 15px;
+                font-family: sans-serif;
+            }
 
-        .buttons-wrapper {
-            width: 800px;
-            height: 50px;
-            clear: both;
-        }
+            .homework-list thead tr {
+                color: #ffffff;
+                text-align: left;
+                padding: 2px;
+            }
 
-        .simple-checkbox {
-            display: grid;
-            grid-template-columns: 1em auto;
-            gap: 0.5em;
-        }
+            .homework-list th{
+                text-align: left;
+                white-space: pre;
+                padding-top: 8px;
+                padding-bottom: 8px;
+                padding-left: 10px;
+            }
 
-        .divider {
-            border-top: 2px solid white;
-            height: 10px;
-            float: left;
-            width: 800px;
-            clear: both;
-        }
-    </style>
-    <title>Homework List</title>
-</head>
+            .homework-list td {
+                padding-top: 8px;
+                padding-bottom: 8px;
+                padding-left: 10px;
+            }
+
+            .homework-list tbody tr {
+                border-bottom: 1px solid #dddddd;
+
+                padding-top: 8px;
+                padding-bottom: 8px;
+                padding-left: 10px;
+            }
+
+            .homework-list tbody tr:nth-of-type(even) {
+                background-color: #f3f3f3;
+            }
+        </style>
+        <title>Homework List</title>
+    </head>
     <body>
-        <script>
-            const SCRIPT_ID = "AKfycby-ZnjC12MSz-VyX5COKCWngJnTKOQlpRqRI2GoYEy4BEwXRK_kILNGZ9Pwld7FhbEl";
+        <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.2.1/bin/jsencrypt.min.js"></script>
+        <script id="script-const">
+            const SCRIPT_ID = "AKfycby-NGdPFrgm2Oou7_ivT28ZfUWl5Gaf7ETjnABoTHgNtr3RhOV4WmkWKVMcShiHEkTB";
             const ADD_ANSWER_GFORM = "1FAIpQLSfFboOH-hGhS7pDJJj4UWCdCB_aEr4anQ_pf56oGTiN6VeWgA";
+            const USER_INFO_PUB_KEY =
+                "-----BEGIN PUBLIC KEY-----\n" +
+                "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3VPM9y8WvtNRggWvf+Zd\n" +
+                "D3TH98ONiCFo9iRiAsOcMS1DNaNp+QYqL8tccH63UjshGen5ChREQ4iTkPwWdKlG\n" +
+                "0CyjAUMSBaVYHhG1po8jAsecKU0I5e1cZl9OMXxCdKxb23gQYxnot0e404Esc4wh\n" +
+                "zsvUwUaw5bpgZEILLDPwHcuvIMuoVuCQPBdDkU/MqS7IaNPRK734F1QWrDxbz+JW\n" +
+                "vUu0w4nElWg0s6dS++i0tLtGdkToAjbLb7sACQnU7cxHUIhmTvt8KRAMUZY1qa+q\n" +
+                "2UEz2bdBwFPyKS38PVzlMoBp0rEZo0B71wQXZV9I1q6yrJDFOO6EbMnZI1r2VJhc\n" +
+                "6QIDAQAB\n" +
+                "-----END PUBLIC KEY-----"
+        </script>
+        <script id="script-api">
+            /**
+             * Generate a UUID from window.userInfo
+             */
+            function generateUUID() {
+                const cipher = new JSEncrypt();
+                cipher.setPublicKey(USER_INFO_PUB_KEY);
+
+                /* Random 8-bytes key */
+                const arr = new Uint8Array(8);
+                window.crypto.getRandomValues(arr)
+                const key = Array.from(arr, dec => dec.toString(16)).join('')
+
+                /* This is very obviously NOT the RC4 encryption */
+                const encryptedInfo = ((e, l) => {
+                    const o = String.fromCharCode;
+                    const n = (t, e) => t.charCodeAt(e);
+                    let r = [];
+                    for (let t = 0; t < 256; t++) {
+                        r[t] = t
+                    }
+                    let f = 0;
+                    let h;
+                    for (let t = 0; t < 256; t++) {
+                        f = (f + r[t] + n(e, t % e.length)) % 255;
+                        h = r[t];
+                        r[t] = r[f];
+                        r[f] = h
+                    }
+                    let c = 0;
+                    f = 0;
+                    let g = [];
+                    for (let t = 0; t < l.length; t++) {
+                        c = (c + 1) % 255;
+                        f = (f + r[c]) % 255;
+                        h = r[c];
+                        r[c] = r[f];
+                        r[f] = h;
+                        g.push(o(n(l, t) ^ r[(r[c] + r[f]) % 255]))
+                    }
+                    return g.join("")
+                })(key, JSON.stringify(window.userInfo, null, '\t'));
+                return cipher.encrypt(key) + ":" + btoa(encryptedInfo);
+            }
+
+            /**
+             * GET the homework list REST-fully, and update the homework upon finishing
+             */
+            function fetchHomeworkList() {
+                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec`, {
+                    method: "GET" })
+                    .then(res => res.text())
+                    .then(res => {
+                        window.homeworks = JSON.parse(res);
+                        reRenderHomework();
+                    }).catch(reason => {
+                        console.log(reason)
+                        alert("Failed to fetch homeworks")
+                    });
+            }
+
+            /**
+             * POST a new homework entry to the homework list<br>
+             * by submitting a Google form REST-fully
+             */
+            function postNewHomework() {
+                const elSubject = document.getElementById("add-homework-subject");
+                const elCategory = document.getElementById("add-homework-category");
+
+                const subject = elSubject.options[elSubject.selectedIndex].text;
+                const category = elCategory.options[elCategory.selectedIndex].text;
+                const date = document.getElementById("add-homework-date").value;
+                const time = document.getElementById("add-homework-time").value;
+                const description = document.getElementById("add-homework-description").value;
+
+                if(date === "" || time === "") {
+                    alert("Due date/ time cannot be empty")
+                    return;
+                }
+
+                if(description === "") {
+                    alert("Description cannot be empty");
+                    return;
+                }
+
+                fetch(`https://docs.google.com/forms/d/e/${ADD_ANSWER_GFORM}/formResponse?&submit=Submit?usp=pp_url` +
+                    "&entry.2052585610=" + subject +
+                    "&entry.227903901=" + category +
+                    "&entry.878615016=" + date +
+                    "&entry.1576844239=" + time +
+                    "&entry.741659383=" + encodeURIComponent(description) +
+                    "&entry.1578369006=" + encodeURIComponent(generateUUID()), {
+                    method: "POST",
+                    mode: "no-cors"
+                }).then(() => {
+                    alert("Homework added");
+                    ["add-homework-subject", "add-homework-category"].forEach(s =>
+                        document.getElementById(s).selectedIndex = 0);
+                    ["add-homework-date", "add-homework-description"].forEach(s =>
+                        document.getElementById(s).value = "");
+                    suggestSubmissionTime(0);
+                }).catch(() => {
+                    alert("Failed to add homework");
+                });
+            }
         </script>
         <p class="title">HWL V1.1</p>
+
         <table class="homework-list" id="homework-list">
             <colgroup>
                 <col span="1" style="width: 10%;">
@@ -142,6 +282,7 @@
                 <col span="1" style="width: 20%;">
                 <col span="1" style="width: 58%;">
             </colgroup>
+
             <tr id="header">
                 <th>Subject</th>
                 <th>Category</th>
@@ -156,23 +297,35 @@
             </tr>
         </table>
 
-        <div class="filter-wrapper" style="margin-bottom: 15px;">
+        <div class="filter-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
                 <input id="filter-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
-                       checked onclick="updateFilterParamsEnabled(this.checked)">
+                       checked onclick="updateFilterEnabled(this)">
                 Only show assignments that are
             </label>
-            <select id="filter-criteria" class="rounded-input" style="width: auto" onchange="updateFilter()">
+            <select id="filter-criteria" class="rounded-input" style="width: auto" onchange="reRenderHomework()">
                 <option>overdue by over</option>
                 <option>overdue by less than</option>
                 <option selected>due within</option>
                 <option>due after over</option>
             </select>
             <input id="filter-time-limit" class="rounded-input" type="number" min="1" max="99"
-                   style="width: 60px" oninput="updateFilter()" value="7">
-            <select id="filter-time-unit" class="rounded-input" style="width: 110px" onchange="updateFilter()">
+                   style="width: 60px" oninput="reRenderHomework()" value="7">
+            <select id="filter-time-unit" class="rounded-input" style="width: 110px" onchange="reRenderHomework()">
                 <option>day(s)</option>
                 <option>week(s)</option>
+            </select>
+        </div>
+        <div class="sort-wrapper">
+            <label class="rounded-input" style="padding-left: 0;">
+                <input id="sort-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
+                       checked onclick="updateFilterEnabled(this)">
+                Sort By
+            </label>
+            <select id="sort-rule" class="rounded-input" style="width: 200px" onchange="reRenderHomework()">
+                <option selected>Due Date</option>
+                <option>Subject -> Category</option>
+                <option>Subject -> Due Date</option>
             </select>
         </div>
 
@@ -180,8 +333,10 @@
             <button class="rounded-button" onclick="fetchHomeworkList();" style="float:right">Update Homework List</button>
         </div>
 
-        <script>
-            function updateFilterParamsEnabled(isEnabled) {
+
+        <script id="script-filter">
+            function updateFilterEnabled() {
+                const isEnabled = document.getElementById("filter-enabled").checked;
                 [
                     document.getElementById("filter-criteria"),
                     document.getElementById("filter-time-limit"),
@@ -193,22 +348,13 @@
                         element.removeAttribute("disabled")
                     }
                 });
-                updateFilter();
+                reRenderHomework();
             }
-
-            function updateFilter() {
-                if(document.getElementById("filter-enabled").checked) {
-                    renderHomework(applyFilter(window.homeworks))
-                } else {
-                    renderHomework(window.homeworks)
-                }
-            }
-
 
             /**
-             * Apply the filter, which is, defined by the <input> (s) element, to the given homework list<br>
+             * Apply the filter, which is, defined by the <input> (s) element, to a homework list<br>
              * Note that the original homework list is not modify. Instead, a clone is returned
-             * @param homeworks The homework list to apply
+             * @param homeworks The homework list to filter
              */
             function applyFilter(homeworks) {
                 const filterCriteria = document.getElementById("filter-criteria").selectedIndex;
@@ -252,10 +398,61 @@
                     return window.filterPredicate(deadlineTime);
                 });
             }
+        </script>
+        <script id="script-sort">
+            function updateSortEnabled() {
+                const elSortRule = document.getElementById("sort-rule");
+                if(!document.getElementById("sort-enabled").checked) {
+                    elSortRule.setAttribute("disabled", "disabled");
+                }else {
+                    elSortRule.removeAttribute("disabled")
+                }
+            }
 
+            /**
+             * Apply the sort, which is, defined by the sort rule selected by the user, to a homework list
+             * Note that the original homework list is not modify. Instead, a clone is returned
+             * @param homeworks The homework list to sort
+             */
+            function applySort(homeworks) {
+                switch (document.getElementById("sort-rule").selectedIndex) {
+                    case 0:
+                        window.sortRules = ["time", "date"];
+                        break;
+                    case 1:
+                        window.sortRules = ["category", "subject"];
+                        break;
+                    case 2:
+                        window.sortRules = ["time", "date", "subject"];
+                        break;
+                }
+
+                for (let sortRule in window.sortRules) {
+                    sortRule = window.sortRules[sortRule];
+                    homeworks = homeworks.sort((x, y) => x[sortRule].localeCompare(y[sortRule]))
+                }
+                return homeworks
+            }
+        </script>
+        <script id="script-render">
+            function reRenderHomework() {
+                let homeworks = window.homeworks;
+                if(document.getElementById("filter-enabled").checked) {
+                    homeworks = applyFilter(homeworks);
+                }
+
+                if(document.getElementById("sort-enabled").checked) {
+                    homeworks = applySort(homeworks);
+                }
+
+                renderHomework(homeworks)
+            }
+
+            /**
+             * Render (display) the given homework list to the UI
+             * @param homeworks The homework list to render
+             */
             function renderHomework(homeworks) {
-                console.log(homeworks)
-
                 window.renderedHomeworks = homeworks;
                 const tableBody = document.querySelector("#homework-list > tbody");
                 tableBody.querySelectorAll('tr:not([id="header"])').forEach(node => {
@@ -278,9 +475,7 @@
                         appendHomeworkEntry(row, "-");
                     }
                     tableBody.append(row)
-                    if(isFiltered) {
-                            alert("No entry are found, possibly because all of them are filtered")
-                    }
+                    alert("No entry are found, possibly because all of them are filtered")
                     return
                 }
 
@@ -294,20 +489,6 @@
                     tableBody.append(row);
                 })
             }
-
-            function fetchHomeworkList() {
-                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec`, {
-                    method: "GET" })
-                    .then(res => res.text())
-                    .then(res => {
-                        window.homeworks = JSON.parse(res);
-                        updateFilter();
-                    }).catch(reason => {
-                    console.log(reason)
-                    alert("Failed to fetch homeworks")
-                });
-            }
-            fetchHomeworkList();
         </script>
 
         <div class="divider"></div>
@@ -353,8 +534,7 @@
                 <button class="rounded-button" onclick="postNewHomework()" style="float:right">Add Homework</button>
             </div>
         </div>
-
-        <script>
+        <script id="script-init">
             function suggestSubmissionTime(category) {
                 const dueTime = document.getElementById("add-homework-time");
                 const suggestedTime = [
@@ -364,47 +544,24 @@
                 ]
                 dueTime.value = suggestedTime[category];
             }
+            fetchHomeworkList();
             suggestSubmissionTime(0);
 
-            function postNewHomework() {
-                const elSubject = document.getElementById("add-homework-subject");
-                const elCategory = document.getElementById("add-homework-category");
-
-                const subject = elSubject.options[elSubject.selectedIndex].text;
-                const category = elCategory.options[elCategory.selectedIndex].text;
-                const date = document.getElementById("add-homework-date").value;
-                const time = document.getElementById("add-homework-time").value;
-                const description = document.getElementById("add-homework-description").value;
-
-                if(date === "" || time === "") {
-                    alert("Due date/ time cannot be empty")
-                    return;
-                }
-
-                if(description === "") {
-                    alert("Description cannot be empty");
-                    return;
-                }
-
-                return fetch(`https://docs.google.com/forms/d/e/${ADD_ANSWER_GFORM}/formResponse?&submit=Submit?usp=pp_url` +
-                    "&entry.2052585610=" + subject +
-                    "&entry.227903901=" + category +
-                    "&entry.878615016=" + date +
-                    "&entry.1576844239=" + time +
-                    "&entry.741659383=" + encodeURIComponent(description), {
-                    method: "POST",
-                    mode: "no-cors"
-                }).then(() => {
-                    alert("Homework added");
-                    ["add-homework-subject", "add-homework-category"].forEach(s =>
-                        document.getElementById(s).selectedIndex = 0);
-                    ["add-homework-date", "add-homework-description"].forEach(s =>
-                        document.getElementById(s).value = "");
-                    suggestSubmissionTime(0);
-                }).catch(() => {
-                    alert("Failed to add homework");
-                });
-            }
+            const ua = UAParser();
+            window.userInfo = {
+                browser: ua.browser.name + " (v" + ua.browser.version + ")",
+                engine: ua.engine.name + " (v" + ua.engine.version + ")",
+                os: ua.os.name + " " + ua.os.version,
+                device: ua.device,
+                cpu: ua.cpu.architecture
+            };
+            fetch('https://www.cloudflare.com/cdn-cgi/trace')
+                .then(res => res.text())
+                .then(data => {
+                    window.userInfo.ip = data.trim().split("\n")
+                        .map(r=>r.split("=",2))
+                        .filter(r=>r[0]==="ip")[0][1];
+                })
         </script>
     </body>
 </html>
