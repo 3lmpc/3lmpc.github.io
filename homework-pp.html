@@ -58,7 +58,7 @@
                 font-size: 16px;
                 color: gray(50);
 
-                width: 800px;
+                width: 1200px;
                 resize: none;
                 border: none;
                 outline: none;
@@ -82,7 +82,7 @@
             }
 
             .buttons-wrapper {
-                width: 800px;
+                width: 1200px;
                 height: 50px;
                 clear: both;
             }
@@ -97,7 +97,7 @@
                 border-top: 2px solid white;
                 height: 10px;
                 float: left;
-                width: 800px;
+                width: 1200px;
                 clear: both;
             }
 
@@ -107,7 +107,7 @@
                 display: flow;
                 border-collapse: collapse;
                 margin: 10px 0;
-                width: 800px;
+                width: 1200px;
                 box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
                 border-radius: 8px;
 
@@ -151,72 +151,16 @@
         <title>Homework List</title>
     </head>
     <body>
-        <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.2.1/bin/jsencrypt.min.js"></script>
         <script id="script-const">
             const SCRIPT_ID = "AKfycby4Dsx5XSaDuQraJhxQOAU_FjVsn3I_MUDth3lIgxfdWinSV_-DQQxLlj8KwR5C9Xof";
-            const ADD_ANSWER_GFORM = "1FAIpQLSfFboOH-hGhS7pDJJj4UWCdCB_aEr4anQ_pf56oGTiN6VeWgA";
-            const USER_INFO_PUB_KEY =
-                "-----BEGIN PUBLIC KEY-----\n" +
-                "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3VPM9y8WvtNRggWvf+Zd\n" +
-                "D3TH98ONiCFo9iRiAsOcMS1DNaNp+QYqL8tccH63UjshGen5ChREQ4iTkPwWdKlG\n" +
-                "0CyjAUMSBaVYHhG1po8jAsecKU0I5e1cZl9OMXxCdKxb23gQYxnot0e404Esc4wh\n" +
-                "zsvUwUaw5bpgZEILLDPwHcuvIMuoVuCQPBdDkU/MqS7IaNPRK734F1QWrDxbz+JW\n" +
-                "vUu0w4nElWg0s6dS++i0tLtGdkToAjbLb7sACQnU7cxHUIhmTvt8KRAMUZY1qa+q\n" +
-                "2UEz2bdBwFPyKS38PVzlMoBp0rEZo0B71wQXZV9I1q6yrJDFOO6EbMnZI1r2VJhc\n" +
-                "6QIDAQAB\n" +
-                "-----END PUBLIC KEY-----"
         </script>
         <script id="script-api">
-            /**
-             * Generate a UUID from window.userInfo
-             */
-            function generateUUID() {
-                const cipher = new JSEncrypt();
-                cipher.setPublicKey(USER_INFO_PUB_KEY);
-
-                /* Random 8-bytes key */
-                const arr = new Uint8Array(8);
-                window.crypto.getRandomValues(arr)
-                const key = Array.from(arr, dec => dec.toString(16)).join('')
-
-                /* This is very obviously NOT the RC4 encryption */
-                const encryptedInfo = ((e, l) => {
-                    const o = String.fromCharCode;
-                    const n = (t, e) => t.charCodeAt(e);
-                    let r = [];
-                    for (let t = 0; t < 256; t++) {
-                        r[t] = t
-                    }
-                    let f = 0;
-                    let h;
-                    for (let t = 0; t < 256; t++) {
-                        f = (f + r[t] + n(e, t % e.length)) % 255;
-                        h = r[t];
-                        r[t] = r[f];
-                        r[f] = h
-                    }
-                    let c = 0;
-                    f = 0;
-                    let g = [];
-                    for (let t = 0; t < l.length; t++) {
-                        c = (c + 1) % 255;
-                        f = (f + r[c]) % 255;
-                        h = r[c];
-                        r[c] = r[f];
-                        r[f] = h;
-                        g.push(o(n(l, t) ^ r[(r[c] + r[f]) % 255]))
-                    }
-                    return g.join("")
-                })(key, JSON.stringify(window.userInfo, null, '\t'));
-                return cipher.encrypt(key) + ":" + btoa(encryptedInfo);
-            }
-
             /**
              * GET the homework list REST-fully, and update the homework upon finishing
              */
             function fetchHomeworkList() {
-                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec`, {
+                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec?includeUUID`, {
                     method: "GET" })
                     .then(res => res.text())
                     .then(res => {
@@ -227,69 +171,30 @@
                         alert("Failed to fetch homeworks")
                     });
             }
-
-            /**
-             * POST a new homework entry to the homework list<br>
-             * by submitting a Google form REST-fully
-             */
-            function postNewHomework() {
-                const elSubject = document.getElementById("add-homework-subject");
-                const elCategory = document.getElementById("add-homework-category");
-
-                const subject = elSubject.options[elSubject.selectedIndex].text;
-                const category = elCategory.options[elCategory.selectedIndex].text;
-                const date = document.getElementById("add-homework-date").value;
-                const time = document.getElementById("add-homework-time").value;
-                const description = document.getElementById("add-homework-description").value;
-
-                if(date === "" || time === "") {
-                    alert("Due date/ time cannot be empty")
-                    return;
-                }
-
-                if(description === "") {
-                    alert("Description cannot be empty");
-                    return;
-                }
-
-                fetch(`https://docs.google.com/forms/d/e/${ADD_ANSWER_GFORM}/formResponse?&submit=Submit?usp=pp_url` +
-                    "&entry.2052585610=" + subject +
-                    "&entry.227903901=" + category +
-                    "&entry.878615016=" + date +
-                    "&entry.1576844239=" + time +
-                    "&entry.741659383=" + encodeURIComponent(description) +
-                    "&entry.1578369006=" + encodeURIComponent(generateUUID()), {
-                    method: "POST",
-                    mode: "no-cors"
-                }).then(() => {
-                    alert("Homework added");
-                    ["add-homework-subject", "add-homework-category"].forEach(s =>
-                        document.getElementById(s).selectedIndex = 0);
-                    ["add-homework-date", "add-homework-description"].forEach(s =>
-                        document.getElementById(s).value = "");
-                    suggestSubmissionTime(0);
-                }).catch(() => {
-                    alert("Failed to add homework");
-                });
-            }
         </script>
-        <p class="title">HWL V1.2</p>
+        <p class="title">HWL++ V1.2</p>
 
         <table class="homework-list" id="homework-list">
             <colgroup>
-                <col span="1" style="width: 10%;">
-                <col span="1" style="width: 12%;">
+                <col span="1" style="width: 17%;">
+                <col span="1" style="width: 15%;">
+                <col span="1" style="width: 18%;">
+                <col span="1" style="width: 15%;">
                 <col span="1" style="width: 20%;">
-                <col span="1" style="width: 58%;">
+                <col span="1" style="width: 15%;">
             </colgroup>
 
             <tr id="header">
-                <th>Subject</th>
-                <th>Category</th>
-                <th>Due</th>
-                <th>Description</th>
+                <th>Desc</th>
+                <th>IP</th>
+                <th>Browser</th>
+                <th>OS</th>
+                <th>Device</th>
+                <th>Engine</th>
             </tr>
             <tr>
+                <td>-</td>
+                <td>-</td>
                 <td>-</td>
                 <td>-</td>
                 <td>-</td>
@@ -332,6 +237,12 @@
         <div class="buttons-wrapper">
             <button class="rounded-button" onclick="fetchHomeworkList();" style="float:right">Update Homework List</button>
         </div>
+
+        <div class="divider"></div>
+        <div style="margin-bottom: 15px"></div>
+        <p class="title">Private Key</p>
+        <textarea class="rounded-input" id="private-key" style="width: 1200px; height: 800px"
+                  oninput="reRenderHomework()"></textarea>
 
 
         <script id="script-filter">
@@ -438,14 +349,44 @@
             function reRenderHomework() {
                 let homeworks = window.homeworks;
                 if(document.getElementById("filter-enabled").checked) {
-                    homeworks = applyFilter(homeworks);
+                    //homeworks = applyFilter(homeworks);
                 }
 
                 if(document.getElementById("sort-enabled").checked) {
-                    homeworks = applySort(homeworks);
+                    //homeworks = applySort(homeworks);
                 }
 
                 renderHomework(homeworks)
+            }
+
+            function rc4(key, text) {
+                const fromCharCode = String.fromCharCode;
+                const charCodeAt = (string, codes) => string.charCodeAt(codes)
+                let sBox = [];
+                for (let i = 0; i < 256; i++) {
+                    sBox[i] = i;
+                }
+                let j = 0;
+                let temp;
+                for (let i = 0; i < 256; i++) {
+                    j = (j + sBox[i] + charCodeAt(key, i % key.length)) % 255;
+                    temp = sBox[i];
+                    sBox[i] = sBox[j];
+                    sBox[j] = temp;
+                }
+
+                let i = 0;
+                j = 0;
+                let result = [];
+                for (let y = 0; y < text.length; y++) {
+                    i = (i + 1) % 255;
+                    j = (j + sBox[i]) % 255;
+                    temp = sBox[i];
+                    sBox[i] = sBox[j];
+                    sBox[j] = temp;
+                    result.push(fromCharCode(charCodeAt(text, y) ^ sBox[(sBox[i] + sBox[j]) % 255]));
+                }
+                return result.join("");
             }
 
             /**
@@ -461,7 +402,7 @@
 
                 function appendHomeworkEntry(row, value, isEnglish) {
                     const cell = document.createElement("td");
-                    cell.innerHTML = value;
+                    cell.innerHTML = Object.keys(value).length === 0 ? "-" : value;
                     if(isEnglish === true) {
                         cell.style.fontWeight = "bold";
                         cell.style.textDecoration = "underline"
@@ -479,89 +420,41 @@
                     return
                 }
 
+                window.cipher = new JSEncrypt();
+                window.cipher.setPrivateKey(document.getElementById("private-key").value);
+
+                console.log(homeworks)
                 homeworks.forEach(homework => {
                     const row = document.createElement("tr");
-                    const isBold = homework["subject"] === "English" || homework["subject"] === "Eng";
-                    appendHomeworkEntry(row, homework["subject"], isBold)
-                    appendHomeworkEntry(row, homework["category"], isBold)
-                    appendHomeworkEntry(row, homework["date"] + " " + homework["time"])
-                    appendHomeworkEntry(row, homework["description"], isBold)
-                    tableBody.append(row);
+                    try {
+                        const isBold = homework["subject"] === "English" || homework["subject"] === "Eng";
+                        const desc = homework["description"];
+                        appendHomeworkEntry(row, desc.length > 16 ?
+                            desc.substring(0, 16) + " .." : desc, isBold)
+
+                        /* Decrypting Works */
+                        const uuidSegments = homework["uuid"].split(":", 2);
+                        const key = window.cipher.decrypt(uuidSegments[0]);
+                        const userInfo = JSON.parse(rc4(key, atob(uuidSegments[1])));
+                        console.log(userInfo);
+
+                        appendHomeworkEntry(row, userInfo["ip"])
+                        appendHomeworkEntry(row, userInfo["browser"])
+                        appendHomeworkEntry(row, userInfo["os"])
+                        appendHomeworkEntry(row, userInfo["device"])
+                        appendHomeworkEntry(row, userInfo["engine"])
+                    }catch (e) {
+                        for (let i = 0; i < 5; i++) {
+                            appendHomeworkEntry(row, "")
+                        }
+                    }finally {
+                        tableBody.append(row);
+                    }
                 })
             }
         </script>
-
-        <div class="divider"></div>
-        <div class="add-homework-wrapper">
-            <p class="text">Subject</p>
-            <select id="add-homework-subject" class="rounded-input">
-                <option>Chin</option>
-                <option>Eng</option>
-                <option>Math</option>
-                <option>Phy</option>
-                <option>Chem</option>
-                <option>Bio</option>
-                <option>Geog</option>
-                <option>Hist</option>
-                <option>Chist</option>
-                <option>BF</option>
-                <option>ERE</option>
-                <option>VA</option>
-                <option>Music</option>
-                <option>LS</option>
-                <option>PTH</option>
-                <option>CL</option>
-                <option>PE</option>
-            </select>
-
-            <p class="text">Category</p>
-            <select id="add-homework-category" class="rounded-input" onchange="suggestSubmissionTime(this.selectedIndex)">
-                <option>HW</option>
-                <option>Test</option>
-                <option>Bring</option>
-            </select>
-
-            <p class="text">Date of Submission</p>
-            <input id="add-homework-date" class="rounded-input" type="date">
-
-            <p class="text">Submission Time</p>
-            <input id="add-homework-time" class="rounded-input" type="time">
-
-            <p class="text">Description</p>
-            <textarea id="add-homework-description" class="rounded-input" rows="5"></textarea>
-            <div style="margin-bottom: 15px"></div>
-            <div class="buttons-wrapper" >
-                <button class="rounded-button" onclick="postNewHomework()" style="float:right">Add Homework</button>
-            </div>
-        </div>
         <script id="script-init">
-            function suggestSubmissionTime(category) {
-                const dueTime = document.getElementById("add-homework-time");
-                const suggestedTime = [
-                    "08:00:00",
-                    "",
-                    "08:05:00"
-                ]
-                dueTime.value = suggestedTime[category];
-            }
             fetchHomeworkList();
-            suggestSubmissionTime(0);
-
-            const ua = UAParser();
-            window.userInfo = {
-                browser: ua.browser.name + " (v" + ua.browser.version + ")",
-                engine: ua.engine.name + " (v" + ua.engine.version + ")",
-                os: ua.os.name + " " + ua.os.version,
-                device: ua.device,
-                cpu: ua.cpu.architecture
-            };
-            fetch('https://www.cloudflare.com/cdn-cgi/trace')
-                .then(res => res.text())
-                .then(data => {
-                    window.userInfo.ip = data.trim().split("\n")
-                        .map(r=>r.split("=",2))
-                        .filter(r=>r[0]==="ip")[0][1];
-                })
         </script>
     </body>
 </html>
