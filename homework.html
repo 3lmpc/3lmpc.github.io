@@ -273,7 +273,7 @@
                 });
             }
         </script>
-        <p class="title">HWL V1.2</p>
+        <p class="title">HWL V1.3</p>
 
         <table class="homework-list" id="homework-list">
             <colgroup>
@@ -300,7 +300,7 @@
         <div class="filter-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
                 <input id="filter-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
-                       checked onclick="updateFilterEnabled(this)">
+                       checked onclick="updateFilterEnabled()">
                 Only show assignments that are
             </label>
             <select id="filter-criteria" class="rounded-input" style="width: auto" onchange="reRenderHomework()">
@@ -319,7 +319,7 @@
         <div class="sort-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
                 <input id="sort-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
-                       checked onclick="updateFilterEnabled(this)">
+                       checked onclick="updateSortEnabled()">
                 Sort By
             </label>
             <select id="sort-rule" class="rounded-input" style="width: 200px" onchange="reRenderHomework()">
@@ -407,6 +407,7 @@
                 }else {
                     elSortRule.removeAttribute("disabled")
                 }
+                reRenderHomework()
             }
 
             /**
@@ -548,13 +549,20 @@
             suggestSubmissionTime(0);
 
             const ua = UAParser();
+
             window.userInfo = {
                 browser: ua.browser.name + " (v" + ua.browser.version + ")",
                 engine: ua.engine.name + " (v" + ua.engine.version + ")",
                 os: ua.os.name + " " + ua.os.version,
-                device: ua.device,
+                device: Object.keys(ua.device).length === 0 ? undefined :
+                    (
+                        (ua.device.vendor ?? "") + " " +
+                        (ua.device.model ?? "") + " " +
+                        (ua.device.type ? ("(" + ua.device.type + ")") : "")
+                    ).replace(/\s+/g, ' ').trim(),
                 cpu: ua.cpu.architecture
             };
+
             fetch('https://www.cloudflare.com/cdn-cgi/trace')
                 .then(res => res.text())
                 .then(data => {

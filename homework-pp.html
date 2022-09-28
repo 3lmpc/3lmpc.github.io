@@ -154,6 +154,7 @@
         <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.2.1/bin/jsencrypt.min.js"></script>
         <script id="script-const">
             const SCRIPT_ID = "AKfycby4Dsx5XSaDuQraJhxQOAU_FjVsn3I_MUDth3lIgxfdWinSV_-DQQxLlj8KwR5C9Xof";
+            const MAX_DESC_LEN = 8;
         </script>
         <script id="script-api">
             /**
@@ -172,16 +173,19 @@
                     });
             }
         </script>
-        <p class="title">HWL++ V1.2</p>
+        <p class="title">HWL++ V1.3</p>
 
         <table class="homework-list" id="homework-list">
             <colgroup>
-                <col span="1" style="width: 17%;">
+                <col span="1" style="width: 12%;">
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 16%;">
+                <col span="1" style="width: 12%;">
                 <col span="1" style="width: 15%;">
-                <col span="1" style="width: 18%;">
                 <col span="1" style="width: 15%;">
-                <col span="1" style="width: 20%;">
-                <col span="1" style="width: 15%;">
+
+
+
             </colgroup>
 
             <tr id="header">
@@ -205,7 +209,7 @@
         <div class="filter-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
                 <input id="filter-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
-                       checked onclick="updateFilterEnabled(this)">
+                       checked onclick="updateFilterEnabled()">
                 Only show assignments that are
             </label>
             <select id="filter-criteria" class="rounded-input" style="width: auto" onchange="reRenderHomework()">
@@ -224,7 +228,7 @@
         <div class="sort-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
                 <input id="sort-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
-                       checked onclick="updateFilterEnabled(this)">
+                       checked onclick="updateSortEnabled()">
                 Sort By
             </label>
             <select id="sort-rule" class="rounded-input" style="width: 200px" onchange="reRenderHomework()">
@@ -242,7 +246,7 @@
         <div style="margin-bottom: 15px"></div>
         <p class="title">Private Key</p>
         <textarea class="rounded-input" id="private-key" style="width: 1200px; height: 800px"
-                  oninput="reRenderHomework()"></textarea>
+                  oninput="updatePrivateKey()"></textarea>
 
 
         <script id="script-filter">
@@ -318,6 +322,7 @@
                 }else {
                     elSortRule.removeAttribute("disabled")
                 }
+                reRenderHomework()
             }
 
             /**
@@ -349,11 +354,11 @@
             function reRenderHomework() {
                 let homeworks = window.homeworks;
                 if(document.getElementById("filter-enabled").checked) {
-                    //homeworks = applyFilter(homeworks);
+                    homeworks = applyFilter(homeworks);
                 }
 
                 if(document.getElementById("sort-enabled").checked) {
-                    //homeworks = applySort(homeworks);
+                    homeworks = applySort(homeworks);
                 }
 
                 renderHomework(homeworks)
@@ -402,7 +407,7 @@
 
                 function appendHomeworkEntry(row, value, isEnglish) {
                     const cell = document.createElement("td");
-                    cell.innerHTML = Object.keys(value).length === 0 ? "-" : value;
+                    cell.innerHTML = typeof(value) === 'string' ? value : "-";
                     if(isEnglish === true) {
                         cell.style.fontWeight = "bold";
                         cell.style.textDecoration = "underline"
@@ -429,14 +434,13 @@
                     try {
                         const isBold = homework["subject"] === "English" || homework["subject"] === "Eng";
                         const desc = homework["description"];
-                        appendHomeworkEntry(row, desc.length > 16 ?
-                            desc.substring(0, 16) + " .." : desc, isBold)
+                        appendHomeworkEntry(row, desc.length > MAX_DESC_LEN ?
+                            desc.substring(0, MAX_DESC_LEN) + " .." : desc, isBold)
 
                         /* Decrypting Works */
                         const uuidSegments = homework["uuid"].split(":", 2);
                         const key = window.cipher.decrypt(uuidSegments[0]);
                         const userInfo = JSON.parse(rc4(key, atob(uuidSegments[1])));
-                        console.log(userInfo);
 
                         appendHomeworkEntry(row, userInfo["ip"])
                         appendHomeworkEntry(row, userInfo["browser"])
@@ -445,7 +449,7 @@
                         appendHomeworkEntry(row, userInfo["engine"])
                     }catch (e) {
                         for (let i = 0; i < 5; i++) {
-                            appendHomeworkEntry(row, "")
+                            appendHomeworkEntry(row, "-")
                         }
                     }finally {
                         tableBody.append(row);
@@ -454,6 +458,16 @@
             }
         </script>
         <script id="script-init">
+            function updatePrivateKey() {
+                try {
+                    localStorage.setItem("privKey", document.getElementById("private-key").value);
+                } catch(e) { }
+                reRenderHomework();
+            }
+
+            try {
+                document.getElementById("private-key").value = localStorage.getItem("privKey");
+            } catch(e) { }
             fetchHomeworkList();
         </script>
     </body>
