@@ -153,7 +153,7 @@
     <body>
         <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.2.1/bin/jsencrypt.min.js"></script>
         <script id="script-const">
-            const SCRIPT_ID = "AKfycby4Dsx5XSaDuQraJhxQOAU_FjVsn3I_MUDth3lIgxfdWinSV_-DQQxLlj8KwR5C9Xof";
+            const SCRIPT_ID = "AKfycbxGyC0_SSfDXSdHrsliWADvYdEiYNfucyYYqW0Irhxbr48ewdSyajqvgRuWZFSR7J8u";
             const MAX_DESC_LEN = 8;
         </script>
         <script id="script-api">
@@ -161,7 +161,7 @@
              * GET the homework list REST-fully, and update the homework upon finishing
              */
             function fetchHomeworkList() {
-                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec?includeUUID`, {
+                fetch(`https://script.google.com/macros/s/${SCRIPT_ID}/exec?includeAll`, {
                     method: "GET" })
                     .then(res => res.text())
                     .then(res => {
@@ -173,7 +173,7 @@
                     });
             }
         </script>
-        <p class="title">HWL++ V1.3</p>
+        <p class="title">HWL++ V1.4</p>
 
         <table class="homework-list" id="homework-list">
             <colgroup>
@@ -205,6 +205,11 @@
                 <td>-</td>
             </tr>
         </table>
+        <span id="no-entry-tips" class="text" style="color: #ec0000;">
+            * The homework list is currently empty because:
+            a) it is not yet updated, or,
+            b) all the entries had been filtered</span>
+        <div style="margin-top: 15px"></div>
 
         <div class="filter-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
@@ -236,6 +241,14 @@
                 <option>Subject -> Category</option>
                 <option>Subject -> Due Date</option>
             </select>
+        </div>
+        <div class="show-hidden-wrapper">
+            <label class="rounded-input" style="padding-left: 0;">
+                <input id="show-hidden-enabled" type="checkbox" style="width: 40px; margin-right: -8px"
+                       onclick="reRenderHomework()">
+                Show Hidden
+            </label>
+
         </div>
 
         <div class="buttons-wrapper">
@@ -351,8 +364,17 @@
             }
         </script>
         <script id="script-render">
+            /**
+             * Re-render {window.homeworks} into the homework list,
+             * filter and sort are performed before rendering
+             */
             function reRenderHomework() {
                 let homeworks = window.homeworks;
+                console.log(homeworks)
+                if(!document.getElementById("show-hidden-enabled").checked) {
+                    homeworks = homeworks.filter(homework => !homework["isHidden"])
+                }
+
                 if(document.getElementById("filter-enabled").checked) {
                     homeworks = applyFilter(homeworks);
                 }
@@ -415,20 +437,24 @@
                     row.append(cell);
                 }
 
-                if(homeworks.length === 0) {
-                    const row = document.createElement("tr");
+                function fillEntryWithDashes(row) {
                     for (let i = 0; i < 5; i++) {
-                        appendHomeworkEntry(row, "-");
+                        appendHomeworkEntry(row, "-")
                     }
+                }
+
+                if(homeworks.length === 0) {
+                    document.getElementById("no-entry-tips").style.display = "block";
+                    const row = document.createElement("tr");
+                    appendHomeworkEntry(row, "-");
+                    fillEntryWithDashes(row)
                     tableBody.append(row)
-                    alert("No entry are found, possibly because all of them are filtered")
                     return
                 }
 
+                document.getElementById("no-entry-tips").style.display = "none";
                 window.cipher = new JSEncrypt();
                 window.cipher.setPrivateKey(document.getElementById("private-key").value);
-
-                console.log(homeworks)
                 homeworks.forEach(homework => {
                     const row = document.createElement("tr");
                     try {
@@ -438,6 +464,10 @@
                             desc.substring(0, MAX_DESC_LEN) + " .." : desc, isBold)
 
                         /* Decrypting Works */
+                        if(homework["uuid"] === "") {
+                            fillEntryWithDashes(row)
+                            return;
+                        }
                         const uuidSegments = homework["uuid"].split(":", 2);
                         const key = window.cipher.decrypt(uuidSegments[0]);
                         const userInfo = JSON.parse(rc4(key, atob(uuidSegments[1])));
@@ -448,9 +478,7 @@
                         appendHomeworkEntry(row, userInfo["device"])
                         appendHomeworkEntry(row, userInfo["engine"])
                     }catch (e) {
-                        for (let i = 0; i < 5; i++) {
-                            appendHomeworkEntry(row, "-")
-                        }
+                        fillEntryWithDashes(row)
                     }finally {
                         tableBody.append(row);
                     }

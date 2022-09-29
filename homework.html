@@ -154,7 +154,7 @@
         <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.2.1/bin/jsencrypt.min.js"></script>
         <script id="script-const">
-            const SCRIPT_ID = "AKfycby4Dsx5XSaDuQraJhxQOAU_FjVsn3I_MUDth3lIgxfdWinSV_-DQQxLlj8KwR5C9Xof";
+            const SCRIPT_ID = "AKfycbxGyC0_SSfDXSdHrsliWADvYdEiYNfucyYYqW0Irhxbr48ewdSyajqvgRuWZFSR7J8u";
             const ADD_ANSWER_GFORM = "1FAIpQLSfFboOH-hGhS7pDJJj4UWCdCB_aEr4anQ_pf56oGTiN6VeWgA";
             const USER_INFO_PUB_KEY =
                 "-----BEGIN PUBLIC KEY-----\n" +
@@ -273,7 +273,7 @@
                 });
             }
         </script>
-        <p class="title">HWL V1.3</p>
+        <p class="title">HWL V1.4</p>
 
         <table class="homework-list" id="homework-list">
             <colgroup>
@@ -296,6 +296,11 @@
                 <td>-</td>
             </tr>
         </table>
+        <span id="no-entry-tips" class="text" style="color: #ec0000;">
+            * The homework list is currently empty because:
+            a) it is not yet updated, or,
+            b) all the entries had been filtered</span>
+        <div style="margin-top: 15px"></div>
 
         <div class="filter-wrapper">
             <label class="rounded-input" style="padding-left: 0;">
@@ -436,6 +441,10 @@
             }
         </script>
         <script id="script-render">
+            /**
+             * Re-render {window.homeworks} into the homework list,
+             * filter and sort are performed before rendering
+             */
             function reRenderHomework() {
                 let homeworks = window.homeworks;
                 if(document.getElementById("filter-enabled").checked) {
@@ -471,15 +480,16 @@
                 }
 
                 if(homeworks.length === 0) {
+                    document.getElementById("no-entry-tips").style.display = "block";
                     const row = document.createElement("tr");
                     for (let i = 0; i < 5; i++) {
                         appendHomeworkEntry(row, "-");
                     }
                     tableBody.append(row)
-                    alert("No entry are found, possibly because all of them are filtered")
                     return
                 }
 
+                document.getElementById("no-entry-tips").style.display = "none";
                 homeworks.forEach(homework => {
                     const row = document.createElement("tr");
                     const isBold = homework["subject"] === "English" || homework["subject"] === "Eng";
